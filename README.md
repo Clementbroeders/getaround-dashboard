@@ -14,9 +14,9 @@ Cela résout le problème des retours tardifs, mais peut également potentiellem
 
 Les objectifs sont : 
 
-    - Seuil : quelle devrait être la durée minimale du délai ?
+1) Seuil : quelle devrait être la durée minimale du délai ?
 
-    - Portée : doivent-ils activer la fonctionnalité pour toutes les voitures ? Ou uniquement pour les voitures Connect ?
+2) Portée : doivent-ils activer la fonctionnalité pour toutes les voitures ? Ou uniquement pour les voitures Connect ?
 
 Pour les aider à prendre la bonne décision, ils ont besoin d'informations basées sur les données. Je leur propose donc un tableau de bord interactif, qui sera consultable en ligne.
 
