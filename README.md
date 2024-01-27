@@ -13,6 +13,7 @@ Pour atténuer ces problèmes, nous avons décidé de mettre en place un délai 
 Cela résout le problème des retours tardifs, mais peut également potentiellement nuire aux revenus de Getaround/propriétaires : nous devons trouver le bon compromis.
 
 Les objectifs sont : 
+
     - Seuil : quelle devrait être la durée minimale du délai ?
 
     - Portée : doivent-ils activer la fonctionnalité pour toutes les voitures ? Ou uniquement pour les voitures Connect ?
