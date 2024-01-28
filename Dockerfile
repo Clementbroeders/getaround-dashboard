@@ -13,4 +13,4 @@ COPY . /home/app/
 ENV PORT=8501
 
 # Run the Streamlit app
-CMD streamlit run --server.port $PORT app.py
+CMD streamlit run --server.port $PORT streamlit.py

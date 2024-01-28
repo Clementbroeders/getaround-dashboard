@@ -4,21 +4,21 @@
 
 ## Introduction
 
-Lors de l'utilisation de Getaround, les conducteurs réservent des voitures pour une période spécifique, allant d'une heure à plusieurs jours. Ils sont censés ramener la voiture à temps, mais il arrive de temps en temps que les conducteurs soient en retard pour la restitution.
+Lors de l'utilisation de **Getaround**, les conducteurs réservent des voitures pour une période spécifique, allant d'une heure à plusieurs jours. Ils sont censés ramener la voiture à temps, mais il arrive de temps en temps que les conducteurs soient en retard pour la restitution.
 
-Les retours tardifs lors de la restitution peuvent générer un fort mécontentement pour le conducteur suivant si la voiture était censée être relouée le même jour : le service client rapporte souvent des utilisateurs insatisfaits parce qu'ils ont dû attendre que la voiture revienne de la location précédente, voire des utilisateurs ayant dû annuler leur location parce que la voiture n'a pas été restituée à temps.
+Les retours tardifs lors de la restitution peuvent générer un **fort mécontentement** pour le conducteur suivant si la voiture était censée être relouée le même jour : le service client rapporte souvent des utilisateurs insatisfaits parce qu'ils ont **dû attendre que la voiture revienne de la location précédente**, voire des utilisateurs ayant dû **annuler leur location parce que la voiture n'a pas été restituée à temps**.
 
-Pour atténuer ces problèmes, nous avons décidé de mettre en place un délai minimum entre deux locations. Une voiture ne sera pas affichée dans les résultats de recherche si les heures d'arrivée ou de départ demandées sont trop proches d'une location déjà réservée.
+Pour atténuer ces problèmes, nous avons décidé de mettre en place un **délai minimum entre deux locations**. Une voiture ne sera pas affichée dans les résultats de recherche si les heures d'arrivée ou de départ demandées sont trop proches d'une location déjà réservée.
 
 Cela résout le problème des retours tardifs, mais peut également potentiellement nuire aux revenus de Getaround/propriétaires : nous devons trouver le bon compromis.
 
 Les objectifs sont : 
 
-1) Seuil : quelle devrait être la durée minimale du délai ?
+1) **Seuil** : quelle devrait être la durée minimale du délai ?
 
-2) Portée : doivent-ils activer la fonctionnalité pour toutes les voitures ? Ou uniquement pour les voitures Connect ?
+2) **Portée** : doivent-ils activer la fonctionnalité pour toutes les voitures ? Ou uniquement pour les voitures Connect ?
 
-Pour les aider à prendre la bonne décision, ils ont besoin d'informations basées sur les données. Je leur propose donc un tableau de bord interactif, qui sera consultable en ligne.
+Pour les aider à prendre la bonne décision, ils ont besoin d'informations basées sur les données. Je leur propose donc un **tableau de bord interactif**, qui sera consultable en ligne depuis un navigateur internet.
 
 
 ## Clone du repo
@@ -35,3 +35,4 @@ A remplir
 
 ## Etapes
 
+A remplir
