@@ -14,11 +14,11 @@ Cela résout le problème des retours tardifs, mais peut également potentiellem
 
 Les objectifs sont : 
 
-1) **Seuil** : quelle devrait être la durée minimale du délai ?
+1) **Délai** : Quelle devrait être la durée minimale du délai ?
 
-2) **Portée** : doivent-ils activer la fonctionnalité pour toutes les voitures ? Ou uniquement pour les voitures Connect ?
+2) **Checkin** : Doivent-ils activer la fonctionnalité pour tous les checkin ? Ou uniquement pour les checkin Connect ?
 
-Pour les aider à prendre la bonne décision, ils ont besoin d'informations basées sur les données. Je leur propose donc un **tableau de bord interactif**, qui sera consultable en ligne depuis un navigateur internet.
+Pour les aider à prendre la bonne décision, ils ont besoin d'informations basées sur leurs données. Je leur propose donc un **tableau de bord interactif**, qui sera consultable en ligne depuis un navigateur internet.
 
 
 ## Clone du repo

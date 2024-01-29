@@ -2,6 +2,11 @@ FROM continuumio/miniconda3
 
 WORKDIR /home/app
 
+# Install OS Dependencies
+RUN apt-get update
+RUN apt-get install nano unzip
+RUN apt install curl -y
+
 # Install Python Dependencies
 COPY requirements.txt /home/app
 RUN pip install --no-cache-dir -r requirements.txt
