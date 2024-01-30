@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 import requests
-import json
+import joblib
 
 
 ### CONFIGURATION ###
@@ -42,6 +42,21 @@ def categorize_state(row, df): # Nécessite la fonction has_delay_in_previous
     else:
         return "Etat non reconnu"
 
+def predict_rental_price(data): # Fonction pour prédire le prix de location
+    input_data = pd.DataFrame([data], columns = pricing.drop("rental_price_per_day", axis=1).columns)
+    input_data = preprocessor.transform(input_data)
+    prediction = model.predict(input_data)
+    return prediction[0]
+
+## HEADER ##
+
+columns = st.columns([1, 0.15, 0.15])
+columns[0].title("📊 GetAround Dashboard 📊")
+columns[1].link_button('FastAPI', 'https://getaround-fastapi1-f159113e9f42.herokuapp.com/docs', type = 'primary')
+# columns[1].link_button('FastAPI', 'http://localhost:4000/docs', type = 'primary') # Si déploiement local
+columns[2].link_button('GitHub', 'https://github.com/Clementbroeders/getaround-dashboard', type = 'primary')
+st.write("Ce dashboard a pour but de visualiser les données de GetAround, d'y sélectionner un délai minimum entre deux locations, puis d'analyser les données avant et après modification du seuil.")
+
 
 ## CHARGEMENT DES DONNEES ##
 @st.cache_data
@@ -55,9 +70,7 @@ percent_outliers = 97.5
 lower_quantile = np.percentile(delay['delay_at_checkout_in_minutes'].dropna(), (100 - percent_outliers) / 2)
 upper_quantile = np.percentile(delay['delay_at_checkout_in_minutes'].dropna(), 100 - (100 - percent_outliers) / 2)
 delay = delay[((delay['delay_at_checkout_in_minutes'] >= lower_quantile) & (delay['delay_at_checkout_in_minutes'] <= upper_quantile)) | (delay['delay_at_checkout_in_minutes'].isnull())]
-
 delay_filtered = delay.copy()
-
 
 @st.cache_data
 def load_pricing():
@@ -67,17 +80,18 @@ pricing = load_pricing()
 pricing.loc[pricing['model_key'] == 'Porsche', 'engine_power'] = 500
 pricing.loc[pricing.index == 3765, 'engine_power'] = 105
 
+model = joblib.load('src/model.pkl')
+preprocessor = joblib.load('src/preprocessor.pkl')
+
 
 ## SIDE BAR
 st.sidebar.image('img/image.jpg', use_column_width="auto")
 st.sidebar.title("🔍 Filtres 🔍")
-
 st.sidebar.write('Selectionnez le délai en :')
 selection = st.sidebar.radio(label = "Selection délai", options = ['Pourcentage', 'Minutes'], horizontal=True, label_visibility = 'collapsed')
 if selection == 'Pourcentage':
     seuil_percent = st.sidebar.slider("délai (%)", min_value=0, max_value=100, value=80, label_visibility = 'collapsed') / 100
     seuil_minutes = delay_filtered['delay_at_checkout_in_minutes'][delay_filtered['delay_at_checkout_in_minutes'] > 0].quantile(seuil_percent)
-
 else:
     seuil_minutes = st.sidebar.slider("délai (minutes)", min_value=0, max_value=720, value=180, step=60, label_visibility = 'collapsed')
     seuil_percent = np.sum(delay_filtered['delay_at_checkout_in_minutes'][delay_filtered['delay_at_checkout_in_minutes'] > 0] <= seuil_minutes) / len(delay_filtered['delay_at_checkout_in_minutes'][delay_filtered['delay_at_checkout_in_minutes'] > 0])
@@ -93,7 +107,6 @@ if option_connect:
     selected_options.append('connect')
 if option_mobile:
     selected_options.append('mobile')
-
 if not selected_options:
     st.sidebar.error("Veuillez sélectionner au moins un type de checkin.")
 else:
@@ -101,18 +114,7 @@ else:
     delay_filtered = delay_filtered[delay_filtered['checkin_type'].isin(selected_options)]
 
 
-## MODIFICATION DES DONNEES ##
-
-
 ## APPLICATION ##
-columns = st.columns([1, 0.15, 0.15, 0.15])
-columns[0].title("📊 GetAround Dashboard 📊")
-columns[1].link_button('FastAPI', 'http://localhost:4000/docs', type = 'primary')
-columns[2].link_button('MLFlow', 'https://mlflow.org/', type = 'primary')
-columns[3].link_button('GitHub', 'https://github.com/Clementbroeders/getaround-dashboard', type = 'primary')
-
-st.write("Ce dashboard a pour but de visualiser les données de GetAround, d'y sélectionner un délai minimum entre deux locations, puis d'analyser les données avant et après modification du seuil.")
-
 st.write('Affichage des données :')
 selection_data = st.radio(label = "Selection data", options = ['Aucune donnée', 'Données initiales', 'Données modifiées'], horizontal=True, label_visibility = 'collapsed')
 if selection_data == 'Données initiales':
@@ -121,7 +123,6 @@ elif selection_data == 'Données modifiées':
     st.dataframe(delay_filtered)
 
 st.write("---")
-
 
 columns = st.columns([1,1], gap = 'medium')
 with columns[0]:
@@ -134,7 +135,6 @@ with columns[0]:
     st.metric('Nombre d\'annulations causées par le retard de la précédente location', f"{number_canceled}")
     number_late_canceled = number_late + number_canceled
     st.metric('Nombre d\'impacts en retards et en annulations', number_late_canceled)
-    
     
 with columns[1]:
     st.subheader("📈 Analyse après modification du seuil 📈")
@@ -189,23 +189,34 @@ filters_dict = {
 }
 filters_list = list(filters_dict.values())
 filters_list = [int(value) if isinstance(value, pd.Int64Dtype().type) else value for value in filters_list]
+data_dict = {"filters_list": filters_list}
 
 columns = st.columns([2,1,2])
 recommandations = columns[1].button('Lancer les recommandations', type = 'primary')
-if recommandations:
-    api_url = "http://getaround-dashboard-fastapi-1:4000/predict"
-    data_dict = {"filters_list": filters_list}
-    try:
-        response = requests.post(api_url, json = data_dict)
-        if response.status_code == 200:
-            result = response.json()
-            st.write('Vous pouvez louer votre véhicule au prix de :')
-            st.metric('Prix de location', f"{result['prediction']:.2f} €", label_visibility = 'collapsed')
-        else:
-            st.error(f"Erreur: {response.status_code}, {response.text}")
-    except Exception as e:
-        st.error(f"An exception occurred: {e}")
 
+if recommandations:
+    success = False
+    try:
+        api_urls = ["https://getaround-fastapi1-f159113e9f42.herokuapp.com/predict",
+                    "http://localhost:4000/predict"]
+        for api_url in api_urls:
+            try:
+                response = requests.post(api_url, json=data_dict)
+                if response.status_code == 200:
+                    result = response.json()
+                    st.write('Vous pouvez louer votre véhicule au prix de :')
+                    st.metric('Prix de location', f"{result['prediction']:.2f} €", label_visibility='collapsed')
+                    success = True 
+                    break
+            except requests.RequestException as e:
+                pass
+    except Exception as e:
+        pass
+    if not success:
+        prediction = predict_rental_price(filters_list)
+        st.write('Vous pouvez louer votre véhicule au prix de :')
+        st.metric('Prix de location', f"{prediction:.2f} €", label_visibility='collapsed')
+        
 
 ### FOOTER ###
 st.write("---")

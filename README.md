@@ -21,6 +21,17 @@ Les objectifs sont :
 Pour les aider à prendre la bonne décision, ils ont besoin d'informations basées sur leurs données. Je leur propose donc un **tableau de bord interactif**, qui sera consultable en ligne depuis un navigateur internet.
 
 
+## Accès au Dashboard
+
+Vous pouvez accéder aux dashboard depuis le lien suivant :
+
+[GetAround dashboard](https://getaround-dashboard.streamlit.app/)
+
+Vous pouvez accéder à la documentation du FastAPI au lien suivant :
+
+[FastAPI docs](https://getaround-fastapi1-f159113e9f42.herokuapp.com/docs)
+
+
 ## Clone du repo
 
 Pour cloner le repo, utilisez la commande suivante :
@@ -33,6 +44,39 @@ Pour cloner le repo, utilisez la commande suivante :
 A remplir
 
 
-## Etapes
+## Deploiement local
 
-A remplir
+Si vous souhaitez déployer l'application en local, vous pouvez choisir parmi une des étapes suivantes :
+
+1) Déployer Streamlit + FastAPI
+
+    Il faut simplement lancer la commande `docker-compose up`
+
+    Les sites seront accessibles aux liens :
+
+    - [Streamlit](http://localhost:8501) : `http://localhost:8501`
+
+    - [FastAPI](http://localhost:4000/docs) : `http://localhost:4000`
+
+2) Deployer Streamlit uniquement
+
+    Il faut lancer les 2 commandes suivantes :
+
+    - Build l'image : `docker build -t getaround-streamlit .`
+
+    - Run le container : `docker run -it -v "$(pwd):/home/app" -p 8501:8501 getaround-streamlit`
+
+    Le streamlit sera accessible au lien :
+
+    [Streamlit](http://localhost:8501) : `http://localhost:8501`
+
+3) Deployer FastAPI uniquement
+
+    Readme disponible dans le dossier suivant : [/fastapi](fastapi)
+
+
+## Machine-Learning
+
+Le modèle de machine-learning est disponible au chemin `src/model.pkl` avec le preprocesseur `src/preprocessor.pkl`.
+
+Si vous souhaitez directement lancez vous-même le script (pour obtenir les métriques), vous pouvez lancer la commande suivante `python machine_learning.py`
