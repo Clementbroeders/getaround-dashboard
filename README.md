@@ -23,11 +23,11 @@ Pour les aider à prendre la bonne décision, ils ont besoin d'informations bas�
 
 ## Accès au Dashboard
 
-Vous pouvez accéder aux dashboard depuis le lien suivant :
+Vous pouvez accéder aux **dashboard Streamlit** depuis le lien suivant :
 
 [GetAround dashboard](https://getaround-dashboard.streamlit.app/)
 
-Vous pouvez accéder à la documentation du FastAPI au lien suivant :
+Vous pouvez accéder à la **documentation du FastAPI** au lien suivant :
 
 [FastAPI docs](https://getaround-fastapi1-f159113e9f42.herokuapp.com/docs)
 
@@ -41,7 +41,36 @@ Pour cloner le repo, utilisez la commande suivante :
 
 ## Comment ça marche ?
 
-A remplir
+Pour réaliser ce dashboard, GetAround nous a fourni des données sur l'année 2017 :
+
+Fichier `src/get_around_delay_analysis.xlsx` : contient les locations, avec le type de check-in, les retards, le delta entre 2 locations etc.
+
+Fichier `src/get_around_pricing_project.csv` : contient le prix journalier des véhicules disponibles.
+
+Fonctionnement de l'analyse du seuil :
+
+1) Ce dashboard commence par définir les motifs de retards et d'annulation pour l'analyse globale. 
+
+2) Ensuite, le délai est sélectionné sur la barre latérale (en minutes, ou bien en % du nombre total de locations), puis appliqué sur une copie du jeu de données original.
+
+3) Les formules de calcul sont appliquées sur les 2 jeux de données :
+
+    a) Montant des pertes : prend en compte toutes les lignes `ended` dont le delta entre 2 locations est inférieur au seuil appliqué.
+
+    b) Nombre de retards/annulation : prend en compte toutes les lignes dont le délai au checkout est inférieur ou égale au seuil appliqué.
+
+
+Fonctionnement de la prédiction du prix de location
+
+1) Un ensemble de filtres sont disponibles directement dans le streamlit pour prédire le prix.
+
+2) Application du machine learning :
+
+    Notre modèle en **regression linéaire** propose un **R2 de 0.712**, pour une **RMSE de 18,01**.
+
+    Les autres modèles (plus complexes) proposaient un meilleur résultat, cependant avec de l'overfitting. Le partie prix a donc été de rester sur une regression linéaire.
+
+3) Le résultat nous donne la prédiction du prix de location par jour.
 
 
 ## Deploiement local
@@ -77,6 +106,6 @@ Si vous souhaitez déployer l'application en local, vous pouvez choisir parmi un
 
 ## Machine-Learning
 
-Le modèle de machine-learning est disponible au chemin `src/model.pkl` avec le preprocesseur `src/preprocessor.pkl`.
+Le modèle de machine learning est disponible au chemin `src/model.pkl` avec le preprocesseur `src/preprocessor.pkl`.
 
 Si vous souhaitez directement lancez vous-même le script (pour obtenir les métriques), vous pouvez lancer la commande suivante `python machine_learning.py`
