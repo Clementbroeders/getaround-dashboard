@@ -55,7 +55,6 @@ columns[0].title("📊 GetAround Dashboard 📊")
 columns[1].link_button('FastAPI', 'https://getaround-fastapi1-f159113e9f42.herokuapp.com/docs', type = 'primary')
 # columns[1].link_button('FastAPI', 'http://localhost:4000/docs', type = 'primary') # Si déploiement local
 columns[2].link_button('GitHub', 'https://github.com/Clementbroeders/getaround-dashboard', type = 'primary')
-st.write("Ce dashboard a pour but de visualiser les données de GetAround, d'y sélectionner un délai minimum entre deux locations, puis d'analyser les données avant et après modification du seuil.")
 
 
 ## CHARGEMENT DES DONNEES ##
@@ -96,9 +95,10 @@ else:
     seuil_minutes = st.sidebar.slider("délai (minutes)", min_value=0, max_value=720, value=180, step=60, label_visibility = 'collapsed')
     seuil_percent = np.sum(delay_filtered['delay_at_checkout_in_minutes'][delay_filtered['delay_at_checkout_in_minutes'] > 0] <= seuil_minutes) / len(delay_filtered['delay_at_checkout_in_minutes'][delay_filtered['delay_at_checkout_in_minutes'] > 0])
 delay_filtered['delay_at_checkout_in_minutes'] = delay_filtered['delay_at_checkout_in_minutes'].apply(lambda x: x - seuil_minutes)
+delay_filtered['time_delta_with_previous_rental_in_minutes'] = delay_filtered['time_delta_with_previous_rental_in_minutes'].apply(lambda x: x - seuil_minutes if x is not None else x)
 delay_filtered['categorized_state'] = delay_filtered.apply(categorize_state, axis=1, df=delay_filtered)
 
-st.sidebar.write('Selectionnez le(s) type(s) de checkin :')
+st.sidebar.write('Selectionnez le(s) type(s) de check-in :')
 columns = st.sidebar.columns([1,1])
 option_connect = columns[0].checkbox('Connect', value=True, key = 'connect')
 option_mobile = columns[1].checkbox('Mobile', value=True, key = 'mobile')
@@ -108,13 +108,19 @@ if option_connect:
 if option_mobile:
     selected_options.append('mobile')
 if not selected_options:
-    st.sidebar.error("Veuillez sélectionner au moins un type de checkin.")
+    st.sidebar.error("Veuillez sélectionner au moins un type de check-in.")
 else:
     delay = delay[delay['checkin_type'].isin(selected_options)]
     delay_filtered = delay_filtered[delay_filtered['checkin_type'].isin(selected_options)]
 
 
 ## APPLICATION ##
+st.write("Ce dashboard a pour but de visualiser les données de GetAround, d'appliquer un délai minimum entre deux locations, puis d'analyser les données pour prendre des décisions.")
+st.write("⬅️ Utilisez la barre latérale pour sélectionner le délai minimum entre deux locations et/ou le type de check-in.")
+st.write("Il est également possible de prédire le prix journalier moyen de location d'un véhicule en fonction de ses caractéristiques.")
+
+st.write('---')
+
 st.write('Affichage des données :')
 selection_data = st.radio(label = "Selection data", options = ['Aucune donnée', 'Données initiales', 'Données modifiées'], horizontal=True, label_visibility = 'collapsed')
 if selection_data == 'Données initiales':
@@ -124,22 +130,46 @@ elif selection_data == 'Données modifiées':
 
 st.write("---")
 
+st.subheader("📈 Analyse globale 📈")
+
 columns = st.columns([1,1], gap = 'medium')
 with columns[0]:
-    st.subheader("📈 Analyse initiale 📈")
+    st.write('')
+    st.metric('Nombre de locations prises en compte', f'{len(delay):,}'.replace(',', ' '))
+    checkin = delay['checkin_type'].value_counts(normalize=True)*100
+    fig = px.bar(y = checkin.index, x = checkin.values, title = 'Répartition des types de check-in', labels={'x':'Pourcentage', 'y':'Type de check-in'}, height = 300)
+    fig.update_traces(hovertemplate='%{x:.3f}%')
+    st.plotly_chart(fig, use_container_width = True)
+    
+
+with columns[1]:
+    categorized_state_counts = delay['categorized_state'].value_counts()
+    fig = px.pie(names = categorized_state_counts.index, values = categorized_state_counts.values, width = 800, title = "Distribution des motifs de retard et d'annulation")
+    st.plotly_chart(fig, use_container_width = True)
+
+st.write("---")
+
+columns = st.columns([1,1], gap = 'medium')
+with columns[0]:
+    st.subheader("📈 Analyse (situation actuelle) 📈")
     st.metric('Délai sélectionné :', 'Aucun délai')
     st.metric('Pourcentage des locations impactées :', 'Aucun impact')
+    mean_price = pricing['rental_price_per_day'].mean()
+    number_canceled = len(delay[delay['categorized_state'] == 'Annulation causée par retard précédente location'])
+    price_loss_cancel = mean_price * len(delay[delay['categorized_state'] == 'Annulation causée par retard précédente location'])
+    st.metric('Montant des pertes actuelles', f"{price_loss_cancel:,.0f} €".replace(',', ' '))
     number_late = len(delay[delay['categorized_state'] == 'Retard causé par retard précedente location'])
     st.metric('Nombre de retards causés par le retard de la précédente location', f"{number_late}")
-    number_canceled = len(delay[delay['categorized_state'] == 'Annulation causée par retard précédente location'])
     st.metric('Nombre d\'annulations causées par le retard de la précédente location', f"{number_canceled}")
     number_late_canceled = number_late + number_canceled
     st.metric('Nombre d\'impacts en retards et en annulations', number_late_canceled)
     
 with columns[1]:
-    st.subheader("📈 Analyse après modification du seuil 📈")
+    st.subheader("📈 Analyse (après application du seuil) 📈")
     st.metric('Délai sélectionné :', f'{seuil_minutes:.0f} minutes')
     st.metric('Pourcentage des locations impactées :', f'{seuil_percent * 100:.2f} %')
+    price_loss_filtered = mean_price * len(delay_filtered[(delay_filtered['time_delta_with_previous_rental_in_minutes'] < 0) & (delay_filtered['state'] == 'ended')])
+    st.metric('Montant des pertes estimées', f"{price_loss_filtered:,.0f} €".replace(',', ' '))
     number_late_filtered = len(delay_filtered[delay_filtered['categorized_state'] == 'Retard causé par retard précedente location'])
     st.metric('Nombre de retards causés par le retard de la précédente location', f"{number_late_filtered}")
     number_canceled_filtered = len(delay_filtered[delay_filtered['categorized_state'] == 'Annulation causée par retard précédente location'])
@@ -156,7 +186,8 @@ bool_options = [True, False]
 columns = st.columns([1,1,1,1,1])
 model_key_filter = columns[0].selectbox('Selectionnez la marque', pricing['model_key'].sort_values().unique(), key = 'model_key')
 mileage_filter = columns[1].number_input('Selectionnez le kilométrage', min_value = 0, max_value = 500000, step = 10000, key = 'mileage')
-engine_power_filter = columns[2].selectbox('Selectionnez la motorisation (cv)', pricing['engine_power'].sort_values().unique(), key = 'engine_power')
+engine_power_filter = columns[2].number_input('Selectionnez la motorisation (cv)', min_value = 60, max_value = 550, step = 10, key = 'engine_power')
+# engine_power_filter = columns[2].selectbox('Selectionnez la motorisation (cv)', pricing['engine_power'].sort_values().unique(), key = 'engine_power')
 fuel_filter = columns[3].selectbox('Selectionnez le type de carburant', pricing['fuel'].sort_values().unique(), key = 'fuel')
 paint_color_filter = columns[4].selectbox('Selectionnez la couleur', pricing['paint_color'].sort_values().unique(), key = 'paint_color')
 
@@ -204,7 +235,7 @@ if recommandations:
                 response = requests.post(api_url, json=data_dict)
                 if response.status_code == 200:
                     result = response.json()
-                    st.write('Vous pouvez louer votre véhicule au prix de :')
+                    st.write('Vous pouvez louer votre véhicule au prix journalier de :')
                     st.metric('Prix de location', f"{result['prediction']:.2f} €", label_visibility='collapsed')
                     success = True 
                     break
@@ -214,7 +245,7 @@ if recommandations:
         pass
     if not success:
         prediction = predict_rental_price(filters_list)
-        st.write('Vous pouvez louer votre véhicule au prix de :')
+        st.write('Vous pouvez louer votre véhicule au prix journalier de :')
         st.metric('Prix de location', f"{prediction:.2f} €", label_visibility='collapsed')
         
 
