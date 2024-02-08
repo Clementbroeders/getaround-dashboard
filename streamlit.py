@@ -48,11 +48,12 @@ def predict_rental_price(data): # Fonction pour prédire le prix de location
     prediction = model.predict(input_data)
     return prediction[0]
 
+
 ## HEADER ##
 
 columns = st.columns([1, 0.15, 0.15])
 columns[0].title("📊 GetAround Dashboard 📊")
-columns[1].link_button('FastAPI', 'https://getaround-fastapi1-f159113e9f42.herokuapp.com/docs', type = 'primary')
+columns[1].link_button('FastAPI', 'https://getaround-fastapi.onrender.com/docs', type = 'primary')
 # columns[1].link_button('FastAPI', 'http://localhost:4000/docs', type = 'primary') # Si déploiement local
 columns[2].link_button('GitHub', 'https://github.com/Clementbroeders/getaround-dashboard', type = 'primary')
 
@@ -228,8 +229,9 @@ recommandations = columns[1].button('Lancer les recommandations', type = 'primar
 if recommandations:
     success = False
     try:
-        api_urls = ["https://getaround-fastapi1-f159113e9f42.herokuapp.com/predict",
-                    "http://localhost:4000/predict"]
+        api_urls = ["http://localhost:4000/predict",
+                    "https://getaround-fastapi.onrender.com/predict",
+                    "https://getaround-fastapi1-f159113e9f42.herokuapp.com/predict"]
         for api_url in api_urls:
             try:
                 response = requests.post(api_url, json=data_dict)

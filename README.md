@@ -27,9 +27,15 @@ Vous pouvez accéder aux **dashboard Streamlit** depuis le lien suivant :
 
 [GetAround dashboard](https://getaround-dashboard.streamlit.app/)
 
+
 Vous pouvez accéder à la **documentation du FastAPI** au lien suivant :
 
-[FastAPI docs](https://getaround-fastapi1-f159113e9f42.herokuapp.com/docs)
+[FastAPI docs](https://getaround-fastapi.onrender.com/docs)
+
+
+Ou bien au backup suivant :
+
+[Backup FastAPI docs](https://getaround-fastapi1-f159113e9f42.herokuapp.com/docs)
 
 
 ## Clone du repo

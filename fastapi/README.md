@@ -1,8 +1,8 @@
 # DEPLOIEMENT FASTAPI
 
-FastAPI est dépoyé sur un serveur HEROKU. 
+FastAPI est dépoyé sur un serveur RENDER et HEROKU (backup). 
 
-Le déploiement est fait automatiquement à partir de GitHub (répertoire défini via le fichier `heroku.yml`)
+Le déploiement est fait automatiquement à partir de GitHub (HEROKU : répertoire défini via le fichier `heroku.yml`)
 
 
 ## DEPLOIEMENT LOCAL
@@ -14,6 +14,11 @@ Le déploiement est fait automatiquement à partir de GitHub (répertoire défin
 2) Run container
 
     `docker run -it -v "$(pwd):/home/app" -p 4000:4000 fastapi`
+
+
+## RENDER LINK
+
+[GetAround FastAPI Docs](https://getaround-fastapi.onrender.com/docs)
 
 
 ## HEROKU LINK
