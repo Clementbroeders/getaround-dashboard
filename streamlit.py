@@ -54,7 +54,8 @@ def predict_rental_price(data): # Fonction pour prédire le prix de location
 columns = st.columns([1, 0.15, 0.15])
 columns[0].title("📊 GetAround Dashboard 📊")
 columns[1].link_button('FastAPI', 'https://getaround-fastapi.onrender.com/docs', type = 'primary')
-# columns[1].link_button('FastAPI', 'http://localhost:4000/docs', type = 'primary') # Si déploiement local
+# columns[1].link_button('FastAPI', 'https://getaround-fastapi1-f159113e9f42.herokuapp.com/docs', type = 'primary') # si déploiement Heroku
+# columns[1].link_button('FastAPI', 'http://localhost:4000/docs', type = 'primary') # si déploiement local
 columns[2].link_button('GitHub', 'https://github.com/Clementbroeders/getaround-dashboard', type = 'primary')
 
 
