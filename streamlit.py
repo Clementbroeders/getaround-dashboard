@@ -17,6 +17,42 @@ st.set_page_config(
 
 
 ## FONCTIONS ##
+def get_available_link():
+    api_urls = [
+        'http://getaround-dashboard-fastapi-1:4000',
+        'https://getaround-fastapi.onrender.com/docs',
+        'https://getaround-fastapi1-f159113e9f42.herokuapp.com/docs',
+    ]
+    for api_url in api_urls:
+        try:
+            response = requests.get(api_url)
+            if response.status_code == 200:
+                if api_url == 'http://getaround-dashboard-fastapi-1:4000':
+                    return 'http://localhost:4000/docs'
+                else:
+                    return api_url
+        except requests.RequestException as e:
+            pass
+    return False
+
+
+def get_available_predict(data_dict):
+    api_urls = [
+        'http://getaround-dashboard-fastapi-1:4000/predict',
+        'https://getaround-fastapi.onrender.com/predict',
+        'https://getaround-fastapi1-f159113e9f42.herokuapp.com/predict',
+    ]
+    for api_url in api_urls:
+        try:
+            response = requests.post(api_url, json=data_dict)
+            if response.status_code == 200:
+                result = response.json()
+                return result
+        except requests.RequestException as e:
+            pass
+    return False
+
+
 def has_delay_in_previous(row, df): # Lié à la fonction categorize_state
     if pd.notna(row['previous_ended_rental_id']):
         matching_rows = df[df['rental_id'] == row['previous_ended_rental_id']]
@@ -24,6 +60,7 @@ def has_delay_in_previous(row, df): # Lié à la fonction categorize_state
             previous_row = matching_rows.iloc[0]
             return pd.notna(previous_row['delay_at_checkout_in_minutes']) and previous_row['delay_at_checkout_in_minutes'] > 0
     return False
+
 
 def categorize_state(row, df): # Nécessite la fonction has_delay_in_previous
     if row['state'] == 'canceled':
@@ -42,6 +79,7 @@ def categorize_state(row, df): # Nécessite la fonction has_delay_in_previous
     else:
         return "Etat non reconnu"
 
+
 def predict_rental_price(data): # Fonction pour prédire le prix de location
     input_data = pd.DataFrame([data], columns = pricing.drop("rental_price_per_day", axis=1).columns)
     input_data = preprocessor.transform(input_data)
@@ -49,13 +87,27 @@ def predict_rental_price(data): # Fonction pour prédire le prix de location
     return prediction[0]
 
 
-## HEADER ##
+## SESSION STATE ##
+if 'lien_fastapi' not in st.session_state:
+    st.session_state.lien_fastapi = None
 
+
+## HEADER ##
 columns = st.columns([1, 0.15, 0.15])
 columns[0].title("📊 GetAround Dashboard 📊")
-columns[1].link_button('FastAPI', 'https://getaround-fastapi.onrender.com/docs', type = 'primary')
-# columns[1].link_button('FastAPI', 'https://getaround-fastapi1-f159113e9f42.herokuapp.com/docs', type = 'primary') # si déploiement Heroku
-# columns[1].link_button('FastAPI', 'http://localhost:4000/docs', type = 'primary') # si déploiement local
+placeholder = columns[1].empty()
+if 'lien_fastapi' in st.session_state and st.session_state.lien_fastapi:
+    placeholder.link_button('FastAPI', st.session_state.lien_fastapi, type='primary')
+else:
+    if placeholder.button('FastAPI', type='primary'):
+        available_link = get_available_link()
+        if available_link:
+            st.session_state.lien_fastapi = available_link
+            placeholder.empty()
+            placeholder.link_button('FastAPI', st.session_state.lien_fastapi, type='primary')
+        else:
+            st.error("Impossible de trouver un lien actif pour FastAPI.")
+
 columns[2].link_button('GitHub', 'https://github.com/Clementbroeders/getaround-dashboard', type = 'primary')
 
 
@@ -188,8 +240,7 @@ bool_options = [True, False]
 columns = st.columns([1,1,1,1,1])
 model_key_filter = columns[0].selectbox('Selectionnez la marque', pricing['model_key'].sort_values().unique(), key = 'model_key')
 mileage_filter = columns[1].number_input('Selectionnez le kilométrage', min_value = 0, max_value = 500000, step = 10000, key = 'mileage')
-engine_power_filter = columns[2].number_input('Selectionnez la motorisation (cv)', min_value = 60, max_value = 550, step = 10, key = 'engine_power')
-# engine_power_filter = columns[2].selectbox('Selectionnez la motorisation (cv)', pricing['engine_power'].sort_values().unique(), key = 'engine_power')
+engine_power_filter = columns[2].number_input('Selectionnez la motorisation (cv)', min_value = 60, max_value = 1000, step = 10, key = 'engine_power')
 fuel_filter = columns[3].selectbox('Selectionnez le type de carburant', pricing['fuel'].sort_values().unique(), key = 'fuel')
 paint_color_filter = columns[4].selectbox('Selectionnez la couleur', pricing['paint_color'].sort_values().unique(), key = 'paint_color')
 
@@ -225,32 +276,16 @@ filters_list = [int(value) if isinstance(value, pd.Int64Dtype().type) else value
 data_dict = {"filters_list": filters_list}
 
 columns = st.columns([2,1,2])
-recommandations = columns[1].button('Lancer les recommandations', type = 'primary')
-
+recommandations = columns[1].button('Lancer la recommandation', type = 'primary')
 if recommandations:
-    success = False
-    try:
-        api_urls = ["http://localhost:4000/predict",
-                    "https://getaround-fastapi.onrender.com/predict",
-                    "https://getaround-fastapi1-f159113e9f42.herokuapp.com/predict"]
-        for api_url in api_urls:
-            try:
-                response = requests.post(api_url, json=data_dict)
-                if response.status_code == 200:
-                    result = response.json()
-                    st.write('Vous pouvez louer votre véhicule au prix journalier de :')
-                    st.metric('Prix de location', f"{result['prediction']:.2f} €", label_visibility='collapsed')
-                    success = True 
-                    break
-            except requests.RequestException as e:
-                pass
-    except Exception as e:
-        pass
-    if not success:
-        prediction = predict_rental_price(filters_list)
-        st.write('Vous pouvez louer votre véhicule au prix journalier de :')
-        st.metric('Prix de location', f"{prediction:.2f} €", label_visibility='collapsed')
-        
+    prediction = get_available_predict(data_dict)
+    if prediction:
+        result = prediction['prediction']
+    else:
+        result = predict_rental_price(filters_list)
+    st.write('Vous pouvez louer votre véhicule au prix journalier moyen de :')
+    st.metric('Prix de location', f"{result:.2f} €", label_visibility='collapsed')
+
 
 ### FOOTER ###
 st.write("---")
